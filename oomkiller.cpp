@@ -54,6 +54,7 @@ struct MemInfo getstate(){
 	m.MemTotal = findsubstring("MemTotal:",buf);
 	m.MemAvail = findsubstring("MemAvailable:",buf);
 	m.MemFree  = findsubstring("MemFree:",buf);
+	fclose(fd);
 	return m;
 }
 static int isnumeric(char* str)
