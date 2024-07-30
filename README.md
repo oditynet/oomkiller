@@ -2,6 +2,8 @@
 Simple oom killer of bad process :) .
 Scan mem every 50 ms and kill process at signal( -9 )
 
+process have nice -15
+
 ```
 g++ oomkiller.cpp -o oomkiller
 sudo cp oomkiller /usr/bin
