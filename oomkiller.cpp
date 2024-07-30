@@ -1,9 +1,9 @@
 //============================================================================
-// Name        : argv.cpp
+// Name        : oomkiller.cpp
 // Author      : odity
-// Version     :
+// Version     : 0.1
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description : OOM killer
 //============================================================================
 
 #include <iostream>
