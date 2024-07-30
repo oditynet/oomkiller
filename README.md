@@ -1,7 +1,6 @@
 # oomkiller
 Simple oom killer of bad process :) .
-Scan mem every 50 ms
-Kill process -9
+Scan mem every 50 ms and kill process at signal( -9 )
 
 ```
 g++ oomkiller.cpp -o oomkiller
