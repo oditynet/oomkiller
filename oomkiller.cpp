@@ -2,7 +2,7 @@
 // Name        : oomkiller.cpp
 // Author      : odity
 // Version     : 0.1
-// Copyright   : Your copyright notice
+// Copyright   : GPL3
 // Description : OOM killer
 //============================================================================
 
