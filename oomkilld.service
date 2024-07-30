@@ -1,6 +1,6 @@
 [Unit]
 Description=Simple OOM Daemon
-Documentation=https://github.com/oditynet/oomkill
+Documentation=https://github.com/oditynet/oomkiller
 
 [Service]
 StandardError=syslog
