@@ -1,0 +1,10 @@
+[Unit]
+Description=Simple OOM Daemon
+Documentation=https://github.com/oditynet/oomkill
+
+[Service]
+StandardError=syslog
+ExecStart=/usr/bin/oomkiller 
+
+[Install]
+WantedBy=multi-user.target
