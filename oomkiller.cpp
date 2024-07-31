@@ -1,9 +1,9 @@
 //============================================================================
 // Name        : oomkiller.cpp
 // Author      : odity
-// Version     : 0.1
-// Copyright   : GPL3
-// Description : OOM killer
+// Version     : 0.2
+// Copyright   : Your copyright notice
+// Description : oomkiller
 //============================================================================
 
 #include <iostream>
@@ -14,12 +14,21 @@
 #include <signal.h>
 #include <sys/resource.h>
 
+#define VERSION "0.2"
+int notkill=0;
+long memorylimit=0;
+int killsign=9;
+int list=0;
+char nameprocess[256];
+
 using namespace std;
 
 struct MemInfo{
 	long MemTotal;
 	long MemAvail;
 	long MemFree;
+	long SwapFree;
+	long SwapTotal;
 };
 struct ProcessInfo{
 	int oom_score;
@@ -54,6 +63,8 @@ struct MemInfo getstate(){
 	m.MemTotal = findsubstring("MemTotal:",buf);
 	m.MemAvail = findsubstring("MemAvailable:",buf);
 	m.MemFree  = findsubstring("MemFree:",buf);
+	m.SwapFree  = findsubstring("SwapFree:",buf);
+	m.SwapTotal  = findsubstring("SwapTotal:",buf);
 	fclose(fd);
 	return m;
 }
@@ -85,21 +96,36 @@ struct ProcessInfo getprocstate(int pid){
 	fscanf(f, "%d", &(p.oom_score));
 	fclose(f);
 	snprintf(buff, sizeof(buff), "%d/oom_score_adj", pid);
-		f = fopen(buff,"r");
-		if (f == NULL){
-			p.exited = 1;
-			return p;
-		}
+	f = fopen(buff,"r");
+	if (f == NULL){
+		p.exited = 1;
+		return p;
+	}
 	fscanf(f, "%d", &(p.oom_score_adj));
 	fclose(f);
 	snprintf(buff, sizeof(buff), "%d/statm", pid);
-		f = fopen(buff,"r");
-		if (f == NULL){
-			p.exited = 1;
-			return p;
-		}
+	f = fopen(buff,"r");
+	if (f == NULL){
+		p.exited = 1;
+		return p;
+	}
 	fscanf(f, "%*u %lu", &(p.vm_rss));
 	fclose(f);
+
+	snprintf(buff, sizeof(buff), "%d/stat", pid);
+	FILE * stat = fopen(buff, "r");
+	if (stat == NULL )
+	{
+		p.exited = 1;
+		return p;
+	}
+
+	fscanf(stat, "%*d %s", nameprocess);
+	//cout<<name;
+	//p.name = (p.name)malloc(sizeof (p)*strlen(256)+1);
+	//fscanf(stat, "*d %s", &(p.name));
+	//cout<<p.name;
+	fclose(stat);
 	return p;
 }
 void killindir(DIR * procdir){
@@ -133,9 +159,11 @@ void killindir(DIR * procdir){
 		if(bad < maybebad){
 			bad=maybebad;
 			badpid = pid;
-			cout<<"Potential: "<<pid<<" "<<p.oom_score_adj<<" "<<p.oom_score<<" "<<p.vm_rss<<endl;
+			cout<<"Potential: \t"<<nameprocess<<"\t "<<pid<<"\t "<<p.oom_score_adj<<"\t "<<p.oom_score<<"\t "<<p.vm_rss<<endl;
 		}
 	}
+	if (list == 1)
+		exit(0);
 	if(badpid == 0){
 		cout<<"Coudn't find a process for kill..."<<endl;
 		sleep(1);
@@ -146,15 +174,43 @@ void killindir(DIR * procdir){
 	char name[256];
 	fscanf(stat, "%*d %s", name);
 	fclose(stat);
-
+	if (notkill == 1)
+		return;
 	cout<<"Kill process "<<name<<" of pid "<<pid<<endl;
-	if(kill(badpid, 9) != 0){
+	if(kill(badpid, killsign) != 0){
 		perror("Could not kill process :(");
 		sleep(1);
 	}
 }
-
 int main(int argc, char **argv) {
+	int c;
+	if (argv[0][0] == '-') argv[0]++;
+	while((c = getopt(argc, argv, "l:nvs:r")) != EOF) {
+			switch(c) {
+				case 'n':
+					notkill = 1;
+					break;
+				case 'r':
+					list = 1;
+					break;
+				case 'l':
+					memorylimit = atoi(optarg);
+					if (memorylimit >100 || memorylimit <0)
+						memorylimit = 3;
+					break;
+				case 's':
+					killsign = atoi(optarg);
+					if (killsign >15 || killsign <0)
+						killsign = 9;
+					break;
+				default:
+					fprintf(stderr, "Usage: %s [-r ] listprocessonly [-l percent|memorylimit%] [-s signkill(0-15)] [-n ]|(notkill process)\n",
+					                   argv[0]);
+					           exit(EXIT_FAILURE);
+			}
+		}
+		///if (argc != optind) return 1;
+
 	setpriority(PRIO_PROCESS,getpid(),-15);
 	if(chdir("/proc")!=0)		{
 		perror("Could not cd to /proc");
@@ -169,11 +225,14 @@ int main(int argc, char **argv) {
 	}
 
 	struct MemInfo m;
-	long proc;
+	long procmem,procswap;
 	while(1){
 		m = getstate();
-		proc = 100 * m.MemFree/m.MemTotal;
-		if (proc < 3) //3% free
+		procmem = 100 * m.MemFree/m.MemTotal;
+		procswap = 100 * m.SwapFree/m.SwapTotal;
+		if (memorylimit == 0)
+			memorylimit = 3;
+		if (( procmem < memorylimit && procswap < memorylimit*10) || list == 1) //3% free
 		{
 			cout<<"Alarm: memory "<<m.MemFree<<"Mb"<<endl;
 			killindir(procdir);
