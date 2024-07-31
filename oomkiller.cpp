@@ -119,12 +119,7 @@ struct ProcessInfo getprocstate(int pid){
 		p.exited = 1;
 		return p;
 	}
-
 	fscanf(stat, "%*d %s", nameprocess);
-	//cout<<name;
-	//p.name = (p.name)malloc(sizeof (p)*strlen(256)+1);
-	//fscanf(stat, "*d %s", &(p.name));
-	//cout<<p.name;
 	fclose(stat);
 	return p;
 }
