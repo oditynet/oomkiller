@@ -3,7 +3,6 @@ Description=Simple OOM Daemon
 Documentation=https://github.com/oditynet/oomkiller
 
 [Service]
-StandardError=syslog
 Restart=on-failure
 ExecStart=/usr/bin/oomkiller 
 
