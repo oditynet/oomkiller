@@ -1,5 +1,8 @@
 # oomkiller
-Simple oom killer of bad process :) .
+Simple oom killer of bad process :) 
+
+For analitics it is used cpu used (ver 0.2.1). (Nice for situation then oom_score = 0)
+
 Scan mem every 50 ms and kill process at signal( -9 )
 
 process have nice -15
